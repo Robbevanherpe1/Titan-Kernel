@@ -2,6 +2,8 @@
 
 to run the kernel use the iso in the iso folder and use a tool like rufus to burn usb stick.
 
+U find it /iso/Titan.iso
+
 
 # Commands
 

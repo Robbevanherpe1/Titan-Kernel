@@ -1,8 +1,10 @@
 BITS 16
-[org 0x7c00]
 
-start:
-    ; Set up the stack
+section .text.boot
+global _start
+extern protected_mode
+
+_start:
     cli
     xor ax, ax
     mov ds, ax
@@ -18,11 +20,12 @@ start:
     or eax, 1
     mov cr0, eax
 
-    ; Far jump to flush the prefetch queue
+    ; Far jump to flush the prefetch queue and set up CS
     jmp 08h:protected_mode
 
+section .gdt
+align 8
 gdt_start:
-    ; Null descriptor
     dq 0
 
     ; Code segment descriptor
@@ -46,26 +49,6 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
 
-BITS 32
-protected_mode:
-    ; Set up data segments
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov esp, 0x90000
-
-    ; Jump to the kernel entry point
-    jmp 0x08:kernel_entry
-
-kernel_entry:
-    ; This is where your kernel code starts
-    ; For now, just loop
-.hang:
-    jmp .hang
-
-; Padding to make the file 512 bytes
-times 510-($-$$) db 0
-dw 0xaa55
+section .padding
+    times 510-($-$$) db 0
+    dw 0xaa55

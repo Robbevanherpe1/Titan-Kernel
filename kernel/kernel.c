@@ -1,5 +1,14 @@
+#include "multiboot.h"
+
+// Multiboot header
+__attribute__((section(".multiboot"))) const multiboot_header_t multiboot_header = {
+    .magic = MULTIBOOT_HEADER_MAGIC,
+    .flags = MULTIBOOT_HEADER_FLAGS,
+    .checksum = -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+};
+
 void kernel_main(void) {
-    const char *str = "Hello, Kernel!"; 
+    const char *str = "Hello, Kernel!";
     char *vidptr = (char*)0xb8000;  // video memory begins here.
     unsigned int i = 0;
     unsigned int j = 0;

@@ -1,44 +1,22 @@
-AS=nasm
-CC=i686-elf-gcc
-LD=i686-elf-ld
-ASFLAGS=-f bin
-CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -c
-LDFLAGS=-T linker.ld -m elf_i386
+all: iso/Titan.iso
 
-ISO_DIR=iso
-BOOT_DIR=$(ISO_DIR)/boot
-GRUB_DIR=$(BOOT_DIR)/grub
+iso/boot/bootloader.bin: boot/bootloader.o boot/pmode.o kernel/kernel.o
+	@mkdir -p iso/boot
+	ld -m elf_i386 -T linker.ld --oformat binary -o iso/boot/bootloader.bin boot/bootloader.o boot/pmode.o kernel/kernel.o
 
-all: titan.iso
+boot/bootloader.o: boot/bootloader.s
+	nasm -f elf32 -o boot/bootloader.o boot/bootloader.s
 
-titan.iso: $(ISO_DIR)/titan.iso
-
-$(ISO_DIR)/titan.iso: $(BOOT_DIR)/boot.bin $(BOOT_DIR)/kernel.bin $(GRUB_DIR)/grub.cfg
-	mkdir -p $(ISO_DIR)
-	grub-mkrescue -o $@ $(ISO_DIR)
-
-$(BOOT_DIR)/boot.bin: boot/boot.s
-	mkdir -p $(BOOT_DIR)
-	$(AS) $(ASFLAGS) -o $@ $<
-
-$(BOOT_DIR)/kernel.bin: kernel/kernel.bin
-	mkdir -p $(BOOT_DIR)
-	cat $(BOOT_DIR)/boot.bin $(BOOT_DIR)/kernel.bin > $@
-
-$(GRUB_DIR)/grub.cfg:
-	mkdir -p $(GRUB_DIR)
-	echo 'set timeout=0' > $(GRUB_DIR)/grub.cfg
-	echo 'set default=0' >> $(GRUB_DIR)/grub.cfg
-	echo 'menuentry "Titan" {' >> $(GRUB_DIR)/grub.cfg
-	echo ' multiboot /boot/kernel.bin' >> $(GRUB_DIR)/grub.cfg
-	echo ' boot' >> $(GRUB_DIR)/grub.cfg
-	echo '}' >> $(GRUB_DIR)/grub.cfg
-
-kernel/kernel.bin: kernel/kernel.o
-	$(LD) $(LDFLAGS) -o $@ $<
+boot/pmode.o: boot/pmode.s
+	nasm -f elf32 -o boot/pmode.o boot/pmode.s
 
 kernel/kernel.o: kernel/kernel.c
-	$(CC) $(CFLAGS) -o $@ $<
+	@mkdir -p iso
+	gcc -m32 -ffreestanding -fno-pic -fno-pie -c kernel/kernel.c -o kernel/kernel.o
+
+iso/Titan.iso: iso/boot/bootloader.bin
+	@mkdir -p iso
+	genisoimage -R -b boot/bootloader.bin -no-emul-boot -boot-load-size 4 -boot-info-table -o iso/Titan.iso iso
 
 clean:
-	rm -rf *.bin *.o $(ISO_DIR)/titan.iso
+	rm -rf iso/boot/bootloader.bin kernel/kernel.o boot/*.o iso

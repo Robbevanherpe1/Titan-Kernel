@@ -5,7 +5,9 @@ Its tested using the acer aspire 5951g and the acer aspire one 7571g.
 
 to run the kernel use the command make run alternativly use the iso in the iso folder and use a tool like rufus to burn usb stick.
 
-U find it in the iso folder /iso/Titan.iso
+The latest stable iso can be found in releases.
+The latest development iso can be found in the iso folder /iso/Titan-dev.iso
+
 
 # Commands
 

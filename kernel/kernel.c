@@ -12,10 +12,21 @@ extern void idt_load(); // Defined in assembly
 
 volatile char last_key = 0;
 
+// Function to print debug messages to the screen
+void kernel_print_debug(const char *msg, int *cursor) {
+    volatile char *video = (volatile char*)0xb8000;
+    while (*msg) {
+        video[*cursor * 2] = *msg++;
+        video[*cursor * 2 + 1] = 0x07;
+        (*cursor)++;
+    }
+}
+
 // Keyboard handler main function
 void keyboard_handler_main() {
     uint8_t scancode = inb(0x60);
     last_key = scancode_to_char(scancode);
+    *(volatile char*)0x00120000 = last_key; // Update the memory location with the key value
     outb(0x20, 0x20); // Send End of Interrupt (EOI) signal
 }
 
@@ -106,10 +117,14 @@ void kernel_main() {
     void (*user_app)() = (void (*)())0x00110000; // Assume user_app is loaded at 0x00110000
     user_app();
 
+    i = 0;
+    kernel_print_debug("Kernel: Entered main loop\n", &i);
+
     while (1) {
         if (last_key != 0) {
             vidptr[i++] = last_key;
             vidptr[i++] = 0x07; // attribute-byte: light grey on black screen
+            kernel_print_debug("Kernel: Key detected\n", &i);
             last_key = 0;
         }
     }

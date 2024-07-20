@@ -1,6 +1,13 @@
-BITS 16
+BITS 32
 
-section .text.boot
+section .multiboot
+align 4
+header:
+    dd 0x1BADB002   ; magic number
+    dd 0x0          ; flags
+    dd -(0x1BADB002) ; checksum
+
+section .text
 global _start
 extern protected_mode
 

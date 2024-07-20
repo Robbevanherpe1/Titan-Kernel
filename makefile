@@ -2,7 +2,7 @@ all: iso/Titan.iso
 
 iso/boot/bootloader.bin: boot/bootloader.o boot/pmode.o kernel/kernel.o
 	@mkdir -p iso/boot
-	ld -m elf_i386 -T linker.ld --oformat binary -o iso/boot/bootloader.bin boot/bootloader.o boot/pmode.o kernel/kernel.o
+	ld -m elf_i386 -Ttext 0x7c00 --oformat binary -o iso/boot/bootloader.bin boot/bootloader.o boot/pmode.o kernel/kernel.o
 
 boot/bootloader.o: boot/bootloader.s
 	nasm -f elf32 -o boot/bootloader.o boot/bootloader.s
@@ -28,3 +28,6 @@ iso/Titan.iso: iso/boot/bootloader.bin iso/boot/grub/grub.cfg
 
 clean:
 	rm -rf iso boot/*.o kernel/*.o kernel/kernel.bin
+
+run: iso/Titan.iso
+	qemu-system-i386 -cdrom iso/Titan.iso

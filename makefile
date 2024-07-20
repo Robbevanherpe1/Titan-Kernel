@@ -30,4 +30,4 @@ clean:
 	rm -rf iso boot/*.o kernel/*.o kernel/kernel.bin
 
 run: iso/Titan.iso
-	/snap/core22/current/usr/bin/qemu-system-i386 -cdrom iso/Titan.iso
+	/usr/bin/qemu-system-i386 -cdrom iso/Titan.iso

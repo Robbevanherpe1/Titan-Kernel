@@ -34,7 +34,7 @@ $(KERNEL_DIR)/kernel.bin: $(KERNEL_DIR)/kernel.o $(KERNEL_DIR)/idt_load.o $(BOOT
 
 $(ISO_DIR)/boot/grub/grub.cfg:
 	@mkdir -p $(ISO_DIR)/boot/grub
-	echo 'set timeout=0' > $(ISO_DIR)/boot/grub/grub.cfg
+	echo 'set timeout=5' > $(ISO_DIR)/boot/grub/grub.cfg
 	echo 'set default=0' >> $(ISO_DIR)/boot/grub/grub.cfg
 	echo 'menuentry "Titan Kernel" {' >> $(ISO_DIR)/boot/grub/grub.cfg
 	echo '    multiboot /boot/$(TARGET)' >> $(ISO_DIR)/boot/grub/grub.cfg

@@ -1,33 +1,51 @@
-all: iso/Titan.iso
+# Target
+TARGET = kernel.bin
 
-iso/boot/bootloader.bin: boot/bootloader.o boot/pmode.o kernel/kernel.o
-	@mkdir -p iso/boot
-	ld -m elf_i386 -Ttext 0x7c00 --oformat binary -o iso/boot/bootloader.bin boot/bootloader.o boot/pmode.o kernel/kernel.o
+# Directories
+ISO_DIR = iso
+BOOT_DIR = boot
+KERNEL_DIR = kernel
 
-boot/bootloader.o: boot/bootloader.s
-	nasm -f elf32 -o boot/bootloader.o boot/bootloader.s
+# Compiler and linker
+CC = gcc
+ASM = nasm
+LD = ld
+CFLAGS = -m32 -ffreestanding -fno-pic -fno-pie
+LDFLAGS = -m elf_i386 -T $(KERNEL_DIR)/linker.ld
 
-boot/pmode.o: boot/pmode.s
-	nasm -f elf32 -o boot/pmode.o boot/pmode.s
+# Build rules
+all: $(ISO_DIR)/Titan.iso
 
-kernel/kernel.o: kernel/kernel.c
-	@mkdir -p iso
-	gcc -m32 -ffreestanding -fno-pic -fno-pie -c kernel/kernel.c -o kernel/kernel.o
+$(ISO_DIR)/boot/$(TARGET): $(BOOT_DIR)/boot.o $(KERNEL_DIR)/kernel.bin
+	@mkdir -p $(ISO_DIR)/boot
+	cp $(KERNEL_DIR)/kernel.bin $(ISO_DIR)/boot/$(TARGET)
 
-iso/boot/grub/grub.cfg: 
-	@mkdir -p iso/boot/grub
-	echo 'set timeout=0' > iso/boot/grub/grub.cfg
-	echo 'set default=0' >> iso/boot/grub/grub.cfg
-	echo 'menuentry "Titan Kernel" {' >> iso/boot/grub/grub.cfg
-	echo '    multiboot /boot/bootloader.bin' >> iso/boot/grub/grub.cfg
-	echo '    boot' >> iso/boot/grub/grub.cfg
-	echo '}' >> iso/boot/grub/grub.cfg
+$(BOOT_DIR)/boot.o: $(BOOT_DIR)/boot.asm
+	$(ASM) -f elf32 -o $(BOOT_DIR)/boot.o $(BOOT_DIR)/boot.asm
 
-iso/Titan.iso: iso/boot/bootloader.bin iso/boot/grub/grub.cfg
-	grub-mkrescue -o iso/Titan.iso iso
+$(KERNEL_DIR)/kernel.o: $(KERNEL_DIR)/kernel.c
+	$(CC) $(CFLAGS) -c $(KERNEL_DIR)/kernel.c -o $(KERNEL_DIR)/kernel.o
+
+$(KERNEL_DIR)/idt_load.o: $(KERNEL_DIR)/idt_load.asm
+	$(ASM) -f elf32 -o $(KERNEL_DIR)/idt_load.o $(KERNEL_DIR)/idt_load.asm
+
+$(KERNEL_DIR)/kernel.bin: $(KERNEL_DIR)/kernel.o $(KERNEL_DIR)/idt_load.o $(BOOT_DIR)/boot.o
+	$(LD) $(LDFLAGS) -o $(KERNEL_DIR)/kernel.bin $(BOOT_DIR)/boot.o $(KERNEL_DIR)/kernel.o $(KERNEL_DIR)/idt_load.o
+
+$(ISO_DIR)/boot/grub/grub.cfg:
+	@mkdir -p $(ISO_DIR)/boot/grub
+	echo 'set timeout=0' > $(ISO_DIR)/boot/grub/grub.cfg
+	echo 'set default=0' >> $(ISO_DIR)/boot/grub/grub.cfg
+	echo 'menuentry "Titan Kernel" {' >> $(ISO_DIR)/boot/grub/grub.cfg
+	echo '    multiboot /boot/$(TARGET)' >> $(ISO_DIR)/boot/grub/grub.cfg
+	echo '    boot' >> $(ISO_DIR)/boot/grub/grub.cfg
+	echo '}' >> $(ISO_DIR)/boot/grub/grub.cfg
+
+$(ISO_DIR)/Titan.iso: $(ISO_DIR)/boot/$(TARGET) $(ISO_DIR)/boot/grub/grub.cfg
+	grub-mkrescue -o $(ISO_DIR)/Titan.iso $(ISO_DIR)
 
 clean:
-	rm -rf iso boot/*.o kernel/*.o kernel/kernel.bin
+	rm -rf $(ISO_DIR) $(BOOT_DIR)/*.o $(KERNEL_DIR)/*.o $(KERNEL_DIR)/*.bin
 
-run: iso/Titan.iso
-	/usr/bin/qemu-system-i386 -cdrom iso/Titan.iso
+run: $(ISO_DIR)/Titan.iso
+	qemu-system-i386 -cdrom $(ISO_DIR)/Titan.iso -d int,cpu_reset -no-reboot -no-shutdown -monitor stdio

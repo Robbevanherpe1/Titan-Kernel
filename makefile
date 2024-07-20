@@ -6,13 +6,14 @@ ISO_DIR = iso
 BOOT_DIR = boot
 KERNEL_DIR = kernel
 USER_DIR = user
+INCLUDE_DIR = include
 
 # Compiler and linker
 CC_KERNEL = gcc
 CC_USER = gcc
 ASM = nasm
 LD = ld
-CFLAGS_KERNEL = -m32 -ffreestanding -fno-pic -fno-pie
+CFLAGS_KERNEL = -m32 -ffreestanding -fno-pic -fno-pie -I$(INCLUDE_DIR)
 CFLAGS_USER = -m32
 LDFLAGS = -m elf_i386 -T $(KERNEL_DIR)/linker.ld
 

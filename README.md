@@ -1,9 +1,11 @@
 # Titan-Kernel
 
+This kernnel is made for the i386 processor and is not compatible with the amd64 processor.
+Its tested using the acer aspire 5951g and the acer aspire one 7571g.
+
 to run the kernel use the iso in the iso folder and use a tool like rufus to burn usb stick.
 
-U find it /iso/Titan.iso
-
+U find it in the iso folder /iso/Titan.iso
 
 # Commands
 

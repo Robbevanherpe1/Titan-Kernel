@@ -25,4 +25,12 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    /* Place the user-space application */
+    . = 0x00110000;
+
+    .user_app ALIGN(4) :
+    {
+        *(.text.user)
+    }
 }

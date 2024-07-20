@@ -61,7 +61,9 @@ void kernel_main() {
         vidptr[i++] = 0x07;  // attribute-byte: light grey on black screen
     }
 
-    //asm volatile ("sti"); // Enable interrupts
+    // Simulate running a user-space application
+    void (*user_app)() = (void (*)())0x00110000; // Assume user_app is loaded at 0x00110000
+    user_app();
 
     while (1); // Hang
 }
